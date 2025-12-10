@@ -33,18 +33,23 @@ export default async function handler(req, res) {
     }
 
     // --- READ (GET) ---
-    else if (method === 'GET') {
+else if (method === 'GET') {
       if (id) {
+        // Отримати один набір
         const { rows } = await client.query('SELECT * FROM decks WHERE id = $1', [id]);
-        if (rows.length === 0) return res.status(404).json({ error: 'Deck not found' });
-        res.status(200).json(rows[0]);
+        
+        // Тут ми повертаємо ОБ'ЄКТ (rows[0]), а не рядок
+        res.status(200).json(rows[0]); 
         return; 
       } else {
+        // Отримати всі набори
         const { rows } = await client.query('SELECT * FROM decks ORDER BY updated_at DESC');
+        
+        // Тут ми повертаємо МАСИВ (rows), а не рядок
         res.status(200).json(rows);
         return; 
       }
-    } 
+    }
 
     // --- UPDATE (PUT) ---
     else if (method === 'PUT') {
@@ -80,6 +85,7 @@ export default async function handler(req, res) {
     }
   }
 }
+
 
 
 
