@@ -1,22 +1,19 @@
-// api/decks.js - Vercel Serverless Function for CRUD operations
+// api/decks.js - ФІНАЛЬНА ВЕРСІЯ З ВИКОРИСТАННЯМ СЕРТИФІКАТА
 
-// Встановіть 'pg' для PostgreSQL або 'mongodb' для MongoDB
-// npm install pg
 import { Pool } from 'pg'; 
 
-const caCert = process.env.PG_CA_CERT;
+// 1. Зчитування сертифіката з Vercel Environment Variable
+const caCert = process.env.PG_CA_CERT; 
 
-// *** НАЛАШТУВАННЯ ПІДКЛЮЧЕННЯ ДО AIVEN ***
-// Vercel автоматично зчитує цю змінну з налаштувань проєкту
 const pool = new Pool({
   connectionString: process.env.AIVEN_POSTGRES_URL, 
   ssl: caCert ? {
-    // Встановлюємо сертифікат, отриманий з Vercel
+    // 2. Використання сертифіката Aiven для безпечного підключення
     ca: caCert,
-    // Вимикаємо перевірку сертифіката лише якщо сертифікат не наданий
+    // rejectUnauthorized: true вимагає, щоб сертифікат був дійсним (наш випадок)
     rejectUnauthorized: true, 
   } : {
-    // Якщо сертифікат не знайдено, тимчасово ігноруємо перевірку (як у попередньому рішенні)
+    // Резервний варіант: якщо сертифікат не знайдено (наприклад, при локальному запуску без змінної)
     rejectUnauthorized: false,
   },
   max: 1, 
@@ -24,33 +21,27 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
-  const { method } = req;
-  // Отримання ID з URL, наприклад, /api/decks/123
-  const id = req.query.id; 
-
+  let client;
   try {
-    const client = await pool.connect();
-    
-    // --- CREATE (POST) ---
+    client = await pool.connect();
+    const { method } = req;
+    const id = req.query.id;
+
     if (method === 'POST') {
       const { title, description, cards } = req.body;
       const newDeck = await client.query(
         'INSERT INTO decks (title, description, cards, updated_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
-        // Зберігаємо картки як JSONB у PostgreSQL
         [title, description, JSON.stringify(cards)] 
       );
       res.status(201).json(newDeck.rows[0]);
     } 
     
-    // --- READ (GET) ---
     else if (method === 'GET') {
       if (id) {
-        // Отримати один набір
         const { rows } = await client.query('SELECT * FROM decks WHERE id = $1', [id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Deck not found' });
         res.status(200).json(rows[0]);
       } else {
-        // Отримати всі набори
         const { rows } = await client.query('SELECT * FROM decks ORDER BY updated_at DESC');
         res.status(200).json(rows);
       }
@@ -71,17 +62,21 @@ export default async function handler(req, res) {
         await client.query('DELETE FROM decks WHERE id = $1', [id]);
         res.status(204).end(); // No Content
     }
+
     
-    // --- Method Not Allowed ---
     else {
       res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
       res.status(405).end(`Method ${method} Not Allowed`);
     }
     
-    client.release();
-    
   } catch (error) {
     console.error('Database Operation Error:', error);
     res.status(500).json({ error: 'Failed to process request', details: error.message });
+  } finally {
+    if (client) {
+        client.release();
+    }
   }
 }
+    
+
