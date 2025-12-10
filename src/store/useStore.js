@@ -1,5 +1,12 @@
 import { create } from "zustand";
 
+// Функція для приведення ID до числа. Це критично важливо,
+// оскільки PostgreSQL повертає ID як рядок, а фронт-енд очікує число.
+const transformDeck = (deck) => ({
+    ...deck,
+    id: Number(deck.id) || deck.id, 
+});
+
 export const useStore = create((set, get) => ({
   decks: [],
   isLoading: true,
@@ -8,14 +15,17 @@ export const useStore = create((set, get) => ({
   loadDecks: async () => {
     set({ isLoading: true });
     try {
-      // Звернення до Vercel Serverless Function
       const response = await fetch("/api/decks");
       if (!response.ok) throw new Error("Failed to fetch decks");
+      
       const cloudDecks = await response.json();
-      set({ decks: cloudDecks, isLoading: false });
+      
+      // *** ЗАСТОСУВАННЯ ТРАНСФОРМАЦІЇ ***
+      const transformedDecks = cloudDecks.map(transformDeck);
+      
+      set({ decks: transformedDecks, isLoading: false });
     } catch (error) {
       console.error("Error loading decks from cloud:", error);
-      // Можна завантажити заглушки у випадку помилки (опціонально)
       set({ isLoading: false });
     }
   },
@@ -29,10 +39,14 @@ export const useStore = create((set, get) => ({
         body: JSON.stringify(deck),
       });
       if (!response.ok) throw new Error("Failed to add deck");
+      
       const newDeck = await response.json();
+      
+      // *** ЗАСТОСУВАННЯ ТРАНСФОРМАЦІЇ ***
+      const finalDeck = transformDeck(newDeck);
 
       set((state) => ({
-        decks: [...state.decks, newDeck],
+        decks: [...state.decks, finalDeck],
       }));
     } catch (error) {
       console.error("Error adding deck:", error);
@@ -49,7 +63,8 @@ export const useStore = create((set, get) => ({
       if (!response.ok) throw new Error("Failed to delete deck");
 
       set((state) => ({
-        decks: state.decks.filter((d) => d.id !== id),
+        // Порівняння id працюватиме, бо тепер вони числа
+        decks: state.decks.filter((d) => d.id !== id), 
       }));
     } catch (error) {
       console.error("Error deleting deck:", error);
@@ -66,10 +81,15 @@ export const useStore = create((set, get) => ({
         body: JSON.stringify(updatedDeck),
       });
       if (!response.ok) throw new Error("Failed to update deck");
-      const finalDeck = await response.json();
+      
+      const updatedDeckData = await response.json();
+
+      // *** ЗАСТОСУВАННЯ ТРАНСФОРМАЦІЇ ***
+      const finalDeck = transformDeck(updatedDeckData);
 
       set((state) => ({
-        decks: state.decks.map((d) => (d.id === id ? finalDeck : d)),
+        // Порівняння id працюватиме, бо тепер вони числа
+        decks: state.decks.map((d) => (d.id === id ? finalDeck : d)), 
       }));
     } catch (error) {
       console.error("Error updating deck:", error);
