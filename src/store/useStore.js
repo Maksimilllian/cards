@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
-// Функція для приведення ID до числа. Це критично важливо,
-// оскільки PostgreSQL повертає ID як рядок, а фронт-енд очікує число.
+// !!! КРИТИЧНО ВАЖЛИВО: Функція для приведення ID до числа. !!!
 const transformDeck = (deck) => ({
     ...deck,
     id: Number(deck.id) || deck.id, 
@@ -11,7 +10,7 @@ export const useStore = create((set, get) => ({
   decks: [],
   isLoading: true,
 
-  // 1. ЗАВАНТАЖЕННЯ (GET)
+  // 1. ЗАВАНТАЖЕННЯ (GET) - ТЕПЕР ПІДТЯГНЕ ВАШІ НАБОРИ
   loadDecks: async () => {
     set({ isLoading: true });
     try {
@@ -20,7 +19,7 @@ export const useStore = create((set, get) => ({
       
       const cloudDecks = await response.json();
       
-      // *** ЗАСТОСУВАННЯ ТРАНСФОРМАЦІЇ ***
+      // *** ЗАСТОСУВАТИ ТРАНСФОРМАЦІЮ ***
       const transformedDecks = cloudDecks.map(transformDeck);
       
       set({ decks: transformedDecks, isLoading: false });
@@ -30,7 +29,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 2. ДОДАВАННЯ (POST)
+  // 2. ДОДАВАННЯ (POST) - ТЕПЕР ДОДАЄ КОРЕКТНИЙ ID
   addDeck: async (deck) => {
     try {
       const response = await fetch("/api/decks", {
@@ -54,7 +53,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 3. ВИДАЛЕННЯ (DELETE)
+  // 3. ВИДАЛЕННЯ (DELETE) - ТЕПЕР ПРАВИЛЬНО ПОРІВНЮЄ ID
   deleteDeck: async (id) => {
     try {
       const response = await fetch(`/api/decks/${id}`, {
@@ -63,7 +62,6 @@ export const useStore = create((set, get) => ({
       if (!response.ok) throw new Error("Failed to delete deck");
 
       set((state) => ({
-        // Порівняння id працюватиме, бо тепер вони числа
         decks: state.decks.filter((d) => d.id !== id), 
       }));
     } catch (error) {
@@ -72,7 +70,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 4. ОНОВЛЕННЯ (PUT)
+  // 4. ОНОВЛЕННЯ (PUT) - ТЕПЕР ПРАВИЛЬНО ПОРІВНЮЄ ID
   updateDeck: async (id, updatedDeck) => {
     try {
       const response = await fetch(`/api/decks/${id}`, {
@@ -88,7 +86,6 @@ export const useStore = create((set, get) => ({
       const finalDeck = transformDeck(updatedDeckData);
 
       set((state) => ({
-        // Порівняння id працюватиме, бо тепер вони числа
         decks: state.decks.map((d) => (d.id === id ? finalDeck : d)), 
       }));
     } catch (error) {
