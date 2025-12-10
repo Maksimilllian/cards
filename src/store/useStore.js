@@ -96,3 +96,4 @@ export const useStore = create((set, get) => ({
       throw error;
     }
   },
+}));
