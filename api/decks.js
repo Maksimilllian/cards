@@ -20,14 +20,19 @@ export default async function handler(req, res) {
     const { method } = req;
     const id = req.query.id;
 
-    if (method === 'POST') {
+if (method === 'POST') {
       const { title, description, cards } = req.body;
+      
+      // Вставляємо тільки потрібні дані, дозволяючи БД встановити created_at
       const newDeck = await client.query(
-        'INSERT INTO decks (title, description, cards, updated_at) VALUES ($1, $2, $3, NOW()) RETURNING *',
+        `INSERT INTO decks (title, description, cards, created_at, updated_at) 
+         VALUES ($1, $2, $3, NOW(), NOW()) 
+         RETURNING *`,
+        // cards обов'язково має бути JSON-рядком для PostgreSQL
         [title, description, JSON.stringify(cards)] 
       );
       res.status(201).json(newDeck.rows[0]);
-    } 
+    }
     
 else if (method === 'GET') {
       if (id) {
@@ -73,6 +78,7 @@ else if (method === 'GET') {
   }
 }
     
+
 
 
 
