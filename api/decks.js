@@ -29,16 +29,17 @@ export default async function handler(req, res) {
       res.status(201).json(newDeck.rows[0]);
     } 
     
-    else if (method === 'GET') {
+else if (method === 'GET') {
       if (id) {
+        // Отримати один набір
         const { rows } = await client.query('SELECT * FROM decks WHERE id = $1', [id]);
+        
         if (rows.length === 0) return res.status(404).json({ error: 'Deck not found' });
+        
+        // Тут може бути проблема, якщо rows[0].cards приходить не у вигляді JS-об'єкта
+        
         res.status(200).json(rows[0]);
       } else {
-        const { rows } = await client.query('SELECT * FROM decks ORDER BY updated_at DESC');
-        res.status(200).json(rows);
-      }
-    } 
     
     // --- UPDATE (PUT) ---
     else if (method === 'PUT') {
@@ -72,5 +73,6 @@ export default async function handler(req, res) {
   }
 }
     
+
 
 
