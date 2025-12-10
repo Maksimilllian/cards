@@ -1,7 +1,8 @@
 import { create } from "zustand";
 
-// !!! КРИТИЧНО ВАЖЛИВО: Функція для приведення ID до числа. !!!
+// !!! ЦЕЙ БЛОК Є КРИТИЧНО ВАЖЛИВИМ ДЛЯ ВІДОБРАЖЕННЯ !!!
 const transformDeck = (deck) => ({
+    // Приведення ID до числа, оскільки PostgreSQL повертає його як рядок.
     ...deck,
     id: Number(deck.id) || deck.id, 
 });
@@ -10,7 +11,7 @@ export const useStore = create((set, get) => ({
   decks: [],
   isLoading: true,
 
-  // 1. ЗАВАНТАЖЕННЯ (GET) - ТЕПЕР ПІДТЯГНЕ ВАШІ НАБОРИ
+  // 1. ЗАВАНТАЖЕННЯ (GET)
   loadDecks: async () => {
     set({ isLoading: true });
     try {
@@ -19,7 +20,7 @@ export const useStore = create((set, get) => ({
       
       const cloudDecks = await response.json();
       
-      // *** ЗАСТОСУВАТИ ТРАНСФОРМАЦІЮ ***
+      // *** ЗАСТОСУВАННЯ ТРАНСФОРМАЦІЇ ***
       const transformedDecks = cloudDecks.map(transformDeck);
       
       set({ decks: transformedDecks, isLoading: false });
@@ -29,7 +30,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 2. ДОДАВАННЯ (POST) - ТЕПЕР ДОДАЄ КОРЕКТНИЙ ID
+  // 2. ДОДАВАННЯ (POST)
   addDeck: async (deck) => {
     try {
       const response = await fetch("/api/decks", {
@@ -53,7 +54,9 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 3. ВИДАЛЕННЯ (DELETE) - ТЕПЕР ПРАВИЛЬНО ПОРІВНЮЄ ID
+  // ... (Ваші функції deleteDeck та updateDeck також тепер використовують коректні ID для порівняння)
+
+  // 3. ВИДАЛЕННЯ (DELETE)
   deleteDeck: async (id) => {
     try {
       const response = await fetch(`/api/decks/${id}`, {
@@ -70,7 +73,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // 4. ОНОВЛЕННЯ (PUT) - ТЕПЕР ПРАВИЛЬНО ПОРІВНЮЄ ID
+  // 4. ОНОВЛЕННЯ (PUT)
   updateDeck: async (id, updatedDeck) => {
     try {
       const response = await fetch(`/api/decks/${id}`, {
@@ -93,4 +96,3 @@ export const useStore = create((set, get) => ({
       throw error;
     }
   },
-}));
