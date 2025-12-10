@@ -1,9 +1,8 @@
-// api/decks.js - ФІНАЛЬНА ВЕРСІЯ З ВИПРАВЛЕНИМ СИНТАКСИСОМ
+// api/decks.js - ФІНАЛЬНА ВЕРСІЯ (ПОВИННА ВИРІШИТИ 500)
 
 import { Pool } from 'pg'; 
 
-// Глобальне вимкнення перевірки сертифікатів (покладаємося на змінну Vercel)
-// Завжди повинно бути на окремому рядку
+// ВИКЛЮЧАЄМО ПЕРЕВІРКУ SSL
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const pool = new Pool({
@@ -36,15 +35,11 @@ export default async function handler(req, res) {
     // --- READ (GET) ---
     else if (method === 'GET') {
       if (id) {
-        // GET одного набору
         const { rows } = await client.query('SELECT * FROM decks WHERE id = $1', [id]);
-        
         if (rows.length === 0) return res.status(404).json({ error: 'Deck not found' });
-        
         res.status(200).json(rows[0]);
         return; 
       } else {
-        // GET усіх наборів
         const { rows } = await client.query('SELECT * FROM decks ORDER BY updated_at DESC');
         res.status(200).json(rows);
         return; 
@@ -85,7 +80,6 @@ export default async function handler(req, res) {
     }
   }
 }
-
 
 
 
