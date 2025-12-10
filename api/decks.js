@@ -4,17 +4,21 @@
 // npm install pg
 import { Pool } from 'pg'; 
 
+const caCert = process.env.PG_CA_CERT;
+
 // *** НАЛАШТУВАННЯ ПІДКЛЮЧЕННЯ ДО AIVEN ***
 // Vercel автоматично зчитує цю змінну з налаштувань проєкту
 const pool = new Pool({
-  // URL підключення до Aiven DB. Ви отримаєте його від Aiven.
   connectionString: process.env.AIVEN_POSTGRES_URL, 
-  ssl: {
-    // У Aiven зазвичай вимагається SSL, а rejectUnauthorized: false - це спрощення для розробки.
-    // Для продакшену варто використовувати сертифікати Aiven.
-    rejectUnauthorized: false, 
+  ssl: caCert ? {
+    // Встановлюємо сертифікат, отриманий з Vercel
+    ca: caCert,
+    // Вимикаємо перевірку сертифіката лише якщо сертифікат не наданий
+    rejectUnauthorized: true, 
+  } : {
+    // Якщо сертифікат не знайдено, тимчасово ігноруємо перевірку (як у попередньому рішенні)
+    rejectUnauthorized: false,
   },
-  // Використовуйте цей код для забезпечення одного підключення (cold start issue fix)
   max: 1, 
   idleTimeoutMillis: 0,
 });
