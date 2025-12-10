@@ -1,21 +1,14 @@
 // api/decks.js - ФІНАЛЬНА ВЕРСІЯ З ВИКОРИСТАННЯМ СЕРТИФІКАТА
 
 import { Pool } from 'pg'; 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 // 1. Зчитування сертифіката з Vercel Environment Variable
 const caCert = process.env.PG_CA_CERT; 
 
 const pool = new Pool({
   connectionString: process.env.AIVEN_POSTGRES_URL, 
-  ssl: caCert ? {
-    // 2. Використання сертифіката Aiven для безпечного підключення
-    ca: caCert,
-    // rejectUnauthorized: true вимагає, щоб сертифікат був дійсним (наш випадок)
-    rejectUnauthorized: true, 
-  } : {
-    // Резервний варіант: якщо сертифікат не знайдено (наприклад, при локальному запуску без змінної)
-    rejectUnauthorized: false,
-  },
+  // Тепер без секції ssl, оскільки ми вимкнули перевірку глобально
   max: 1, 
   idleTimeoutMillis: 0,
 });
@@ -79,4 +72,5 @@ export default async function handler(req, res) {
   }
 }
     
+
 
