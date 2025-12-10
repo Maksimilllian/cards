@@ -1,8 +1,9 @@
-// api/decks.js - ВИПРАВЛЕНИЙ КОД ЗІ СПРОЩЕНИМ SSL
+// api/decks.js - ФІНАЛЬНА ВЕРСІЯ З ВИПРАВЛЕНИМ СИНТАКСИСОМ
 
 import { Pool } from 'pg'; 
 
 // Глобальне вимкнення перевірки сертифікатів (покладаємося на змінну Vercel)
+// Завжди повинно бути на окремому рядку
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const pool = new Pool({
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
   try {
     client = await pool.connect();
     const { method } = req;
-    const id = req.query.id; // ID береться з query для GET/PUT/DELETE
+    const id = req.query.id;
 
     // --- CREATE (POST) ---
     if (method === 'POST') {
@@ -29,7 +30,7 @@ export default async function handler(req, res) {
         [title, description, JSON.stringify(cards)] 
       );
       res.status(201).json(newDeck.rows[0]);
-      return; // !!! ОБОВ'ЯЗКОВО ДЛЯ ЗАВЕРШЕННЯ
+      return; 
     }
 
     // --- READ (GET) ---
@@ -41,12 +42,12 @@ export default async function handler(req, res) {
         if (rows.length === 0) return res.status(404).json({ error: 'Deck not found' });
         
         res.status(200).json(rows[0]);
-        return; // !!! ОБОВ'ЯЗКОВО ДЛЯ ЗАВЕРШЕННЯ
+        return; 
       } else {
         // GET усіх наборів
         const { rows } = await client.query('SELECT * FROM decks ORDER BY updated_at DESC');
         res.status(200).json(rows);
-        return; // !!! ОБОВ'ЯЗКОВО ДЛЯ ЗАВЕРШЕННЯ
+        return; 
       }
     } 
 
@@ -58,14 +59,14 @@ export default async function handler(req, res) {
         [title, description, JSON.stringify(cards), id]
       );
       res.status(200).json(updatedDeck.rows[0]);
-      return; // !!! ОБОВ'ЯЗКОВО ДЛЯ ЗАВЕРШЕННЯ
+      return; 
     }
 
     // --- DELETE (DELETE) ---
     else if (method === 'DELETE') {
       await client.query('DELETE FROM decks WHERE id = $1', [id]);
-      res.status(204).end(); // No Content
-      return; // !!! ОБОВ'ЯЗКОВО ДЛЯ ЗАВЕРШЕННЯ
+      res.status(204).end(); 
+      return; 
     }
 
     // --- METHOD NOT ALLOWED (Інші методи) ---
@@ -76,7 +77,6 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    // ВАЖЛИВО: Помилки бази даних будуть тут
     console.error('Database Operation Error:', error);
     res.status(500).json({ error: 'Failed to process request', details: error.message });
   } finally {
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     }
   }
 }
-🛠️ Наступні Кроки
+
 
 
 
